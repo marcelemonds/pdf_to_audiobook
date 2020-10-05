@@ -4,6 +4,7 @@ import sys
 import filetype
 import PyPDF2
 import pyttsx3
+from progress.bar import Bar
 
 
 def audiobook_maker(filepath, filename, choice):
@@ -12,20 +13,27 @@ def audiobook_maker(filepath, filename, choice):
     num_pages = pdf_reader.numPages
     player = pyttsx3.init()
     if choice == 'listen directly':
+        bar = Bar(f'Playing audiobook {filename} ', max=num_pages)
         for num in range(0, num_pages):
             page = pdf_reader.getPage(num)
             data = page.extractText()
             player.say(data)
             player.runAndWait()
-        sys.exit()
-
+            bar.next()
+        bar.finish()
+        print(f'Audiobook {filename} finished playing.')
     elif choice == 'as a file':
+        bar = Bar(f'Saving audiobook {filename} ', max=num_pages)
         for num in range(0, num_pages):
             output = f'{filename}_part-{num+1}.mp3'
             page = pdf_reader.getPage(num)
             data = page.extractText()
             player.save_to_file(data, output)
             player.runAndWait()
+            bar.next()
+        bar.finish()
+        print(f'Audiobook {filename} completely saved.')
+    sys.exit()
 
 
 def pdf_to_audiobook():
