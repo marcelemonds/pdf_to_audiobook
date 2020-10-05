@@ -30,12 +30,17 @@ def audiobook_maker(filepath, filename, choice, language):
         print(f'Audiobook {filename} finished playing.')
     # save audiobook to file
     elif choice == 'as a file':
+        # create directory for audiobook
+        if not os.path.exists(f'{filename}'):
+            os.mkdir(filename)
         bar = Bar(f'Saving audiobook {filename} ', max=num_pages)
+        # save audiobook page by page to directory
         for num in range(0, num_pages):
             output = f'{filename}_part-{num+1}.mp3'
+            path = os.path.join(filename, output)
             page = pdf_reader.getPage(num)
             data = page.extractText()
-            player.save_to_file(data, output)
+            player.save_to_file(data, path)
             player.runAndWait()
             bar.next()
         bar.finish()
