@@ -18,10 +18,9 @@ def audiobook_maker_online(filepath, filename, choice, language):
         os.mkdir(filename)
     if choice == 'listen directly':
         print(f'Playing audiobook {filename}.')
-        bar = Bar('Page: ', max=num_pages)
     elif choice == 'as file(s)':
         print(f'Saving audiobook {filename} to file.')
-        bar = Bar('Page: ', max=num_pages)
+    bar = Bar('Page: ', max=num_pages)
     for num in range(0, num_pages):
         bar.next()
         output = f'{filename}_part-{num+1}.mp3'
