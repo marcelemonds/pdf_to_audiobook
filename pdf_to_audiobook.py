@@ -17,9 +17,13 @@ def audiobook_maker(filepath, filename, choice, language):
     for voice in voices:
         if language in voice.name:
             player.setProperty('voice', voice.id)
+    # chnage player speed
+    rate = player.getProperty('rate')
+    player.setProperty('rate', rate-15)
     # play pdf directly
     if choice == 'listen directly':
-        bar = Bar(f'Playing audiobook {filename} ', max=num_pages)
+        print(f'Playing audiobook {filename}.')
+        bar = Bar('Page: ', max=num_pages)
         for num in range(0, num_pages):
             page = pdf_reader.getPage(num)
             data = page.extractText()
@@ -33,7 +37,8 @@ def audiobook_maker(filepath, filename, choice, language):
         # create directory for audiobook
         if not os.path.exists(f'{filename}'):
             os.mkdir(filename)
-        bar = Bar(f'Saving audiobook {filename} ', max=num_pages)
+        print(f'Saving audiobook {filename} to file.')
+        bar = Bar('Page: ', max=num_pages)
         # save audiobook page by page to directory
         for num in range(0, num_pages):
             output = f'{filename}_part-{num+1}.mp3'
@@ -49,7 +54,8 @@ def audiobook_maker(filepath, filename, choice, language):
 
 
 def pdf_to_audiobook():
-    filepath = pyip.inputFilepath(prompt='Please enter the path to your pdf: ', mustExist=True, limit=2)
+    # filepath = pyip.inputFilepath(prompt='Please enter the path to your pdf: ', mustExist=True, limit=2)
+    filepath = 'C:\\Users\Marcel.Emonds\\OneDrive - Havas\\Lektüre\Whitepaper_HowToSellMAtoExecs_OMC_DE.pdf'
     file_type = filetype.guess(filepath).extension
     if file_type != 'pdf':
         sys.exit('Filetype is not supported. Please insert a path to a pdf file.')
