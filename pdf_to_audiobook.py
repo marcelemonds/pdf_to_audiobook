@@ -5,9 +5,37 @@ import filetype
 import PyPDF2
 import pyttsx3
 from progress.bar import Bar
+from gtts import gTTS 
+
+def audiobook_maker_online(filepath, filename, choice, language):
+    languages = {'German': 'de', 'English': 'en'}
+    pdf = open(filepath, 'rb')
+    pdf_reader = PyPDF2.PdfFileReader(pdf)
+    num_pages = pdf_reader.numPages
+    # create directory for audiobook
+    if not os.path.exists(f'{filename}'):
+        os.mkdir(filename)
+    if choice == 'listen directly':
+        print(f'Playing audiobook {filename}.')
+        bar = Bar('Page: ', max=num_pages)
+    elif choice == 'as a file':
+        print(f'Saving audiobook {filename} to file.')
+        bar = Bar('Page: ', max=num_pages)
+    for num in range(0, num_pages):
+        output = f'{filename}_part-{num+1}.mp3'
+        path = os.path.join(filename, output)
+        page = pdf_reader.getPage(num)
+        data = page.extractText()
+        speech = gTTS(text = data, lang = languages[language], slow = False)
+        speech.save(path)
+        if choice == 'listen directly':
+            os.system(path)
+        bar.next()
+    bar.finish()
+    sys.exit()
 
 
-def audiobook_maker(filepath, filename, choice, language):
+def audiobook_maker_offline(filepath, filename, choice, language):
     pdf = open(filepath, 'rb')
     pdf_reader = PyPDF2.PdfFileReader(pdf)
     num_pages = pdf_reader.numPages
@@ -54,15 +82,26 @@ def audiobook_maker(filepath, filename, choice, language):
 
 
 def pdf_to_audiobook():
-    # filepath = pyip.inputFilepath(prompt='Please enter the path to your pdf: ', mustExist=True, limit=2)
-    filepath = 'C:\\Users\Marcel.Emonds\\OneDrive - Havas\\Lektüre\Whitepaper_HowToSellMAtoExecs_OMC_DE.pdf'
+    try:
+        filepath = pyip.inputFilepath(prompt='Please enter the path to your pdf: ', mustExist=True, limit=2)
+    except pyip.ValidationException:
+        sys.exit('Error: Please insert an existing filepath.')
+    # check for filetype
     file_type = filetype.guess(filepath).extension
     if file_type != 'pdf':
-        sys.exit('Filetype is not supported. Please insert a path to a pdf file.')
+        sys.exit('Error: Filetype is not supported. Please insert a path to a pdf file.')
     filename = os.path.basename(filepath).split('.')[0].replace(' ','_')
-    choice = pyip.inputMenu(['listen directly', 'as a file'], limit=2, numbered=True, prompt='How would you like your audiobook?')
-    language = pyip.inputMenu(['German', 'English'], limit=2, numbered=True, prompt='How would you like your audiobook?')
-    audiobook_maker(filepath, filename, choice, language)
+    try:
+        choice = pyip.inputMenu(['listen directly', 'as a file'], limit=2, numbered=True, prompt='How would you like your audiobook?')
+        connection = pyip.inputMenu(['no', 'yes'], limit=2, numbered=True, prompt='Do you have internet connection?')
+        language = pyip.inputMenu(['German', 'English'], limit=2, numbered=True, prompt='What language is audiobook in?')
+    except pyip.RetryLimitException:
+        sys.exit('Error: Please restart the program and select one of the given choices.')
+    if connection == 'no':
+        audiobook_maker_offline(filepath, filename, choice, language)
+    elif connection == 'yes':
+        audiobook_maker_online(filepath, filename, choice, language)
+
 
 
 if __name__ == '__main__':
