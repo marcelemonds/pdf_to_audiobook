@@ -4,6 +4,7 @@ import sys
 import filetype
 import PyPDF2
 import pyttsx3
+import shutil
 from progress.bar import Bar
 from gtts import gTTS 
 
@@ -18,10 +19,11 @@ def audiobook_maker_online(filepath, filename, choice, language):
     if choice == 'listen directly':
         print(f'Playing audiobook {filename}.')
         bar = Bar('Page: ', max=num_pages)
-    elif choice == 'as a file':
+    elif choice == 'as file(s)':
         print(f'Saving audiobook {filename} to file.')
         bar = Bar('Page: ', max=num_pages)
     for num in range(0, num_pages):
+        bar.next()
         output = f'{filename}_part-{num+1}.mp3'
         path = os.path.join(filename, output)
         page = pdf_reader.getPage(num)
@@ -30,9 +32,11 @@ def audiobook_maker_online(filepath, filename, choice, language):
         speech.save(path)
         if choice == 'listen directly':
             os.system(path)
-        bar.next()
+    # remove audiobook directory
+    if choice == 'listen directly':
+        shutil.rmtree(os.path.join(filename))
     bar.finish()
-    sys.exit()
+    return sys.exit()
 
 
 def audiobook_maker_offline(filepath, filename, choice, language):
@@ -53,15 +57,15 @@ def audiobook_maker_offline(filepath, filename, choice, language):
         print(f'Playing audiobook {filename}.')
         bar = Bar('Page: ', max=num_pages)
         for num in range(0, num_pages):
+            bar.next()
             page = pdf_reader.getPage(num)
             data = page.extractText()
             player.say(data)
             player.runAndWait()
-            bar.next()
         bar.finish()
         print(f'Audiobook {filename} finished playing.')
     # save audiobook to file
-    elif choice == 'as a file':
+    elif choice == 'as file(s)':
         # create directory for audiobook
         if not os.path.exists(f'{filename}'):
             os.mkdir(filename)
@@ -69,16 +73,16 @@ def audiobook_maker_offline(filepath, filename, choice, language):
         bar = Bar('Page: ', max=num_pages)
         # save audiobook page by page to directory
         for num in range(0, num_pages):
+            bar.next()
             output = f'{filename}_part-{num+1}.mp3'
             path = os.path.join(filename, output)
             page = pdf_reader.getPage(num)
             data = page.extractText()
             player.save_to_file(data, path)
             player.runAndWait()
-            bar.next()
         bar.finish()
         print(f'Audiobook {filename} completely saved.')
-    sys.exit()
+    return sys.exit()
 
 
 def pdf_to_audiobook():
@@ -92,7 +96,7 @@ def pdf_to_audiobook():
         sys.exit('Error: Filetype is not supported. Please insert a path to a pdf file.')
     filename = os.path.basename(filepath).split('.')[0].replace(' ','_')
     try:
-        choice = pyip.inputMenu(['listen directly', 'as a file'], limit=2, numbered=True, prompt='How would you like your audiobook?')
+        choice = pyip.inputMenu(['listen directly', 'as file(s)'], limit=2, numbered=True, prompt='How would you like your audiobook?')
         connection = pyip.inputMenu(['no', 'yes'], limit=2, numbered=True, prompt='Do you have internet connection?')
         language = pyip.inputMenu(['German', 'English'], limit=2, numbered=True, prompt='What language is audiobook in?')
     except pyip.RetryLimitException:
@@ -101,6 +105,7 @@ def pdf_to_audiobook():
         audiobook_maker_offline(filepath, filename, choice, language)
     elif connection == 'yes':
         audiobook_maker_online(filepath, filename, choice, language)
+    return sys.exit()
 
 
 
